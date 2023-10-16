@@ -5,7 +5,9 @@ from sqlalchemy import String, Integer, Column, Identity
 from datetime import datetime
 
 class Enrollment(Base):
-    __tablename__ = "enrollment"
+    """The association class between Section and Student."""
+    __tablename__ = "enrollments"
+    #the enrollments table has no attributes of its own the, following are foreign keys.
     section: Mapped["Section"] = relationship(back_populates="sections")
     student: Mapped["Student"] = relationship(back_populates="students")
     studentId: Mapped[int] = mapped_column('student_id', ForeignKey("students.student_id"), primary_key=True)
@@ -16,6 +18,7 @@ class Enrollment(Base):
     sectionYear: Mapped[int] = mapped_column("section_year", Integer, ForeignKey("sections.section_year"), primary_key=True)
     semester: Mapped[str] = mapped_column("semester", String(10), ForeignKey("sections.semester"), primary_key=True)
 
+    #to ensure that no student enrolls into the same course more than once in a semester.
     __table_args__ = (UniqueConstraint("department_abbreviation", "course_number", "section_year", "semester", "student_id",
                                        name="enrollments_uk_01"))
 
