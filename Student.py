@@ -26,6 +26,8 @@ class Student(Base):
     deletion in the association table to go along with it."""
     majors: Mapped[List["StudentMajor"]] = relationship(back_populates="student",
                                                         cascade="all, save-update, delete-orphan")
+    sections: Mapped[List["Enrollment"]] = relationship(back_populates="student",
+                                                        cascade="all, save-update, delete-orphan")
     # __table_args__ can best be viewed as directives that we ask SQLAlchemy to
     # send to the database.  In this case, that we want two separate uniqueness
     # constraints (candidate keys).
