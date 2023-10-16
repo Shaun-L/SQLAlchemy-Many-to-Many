@@ -4,6 +4,7 @@ from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List                 # Use this for the list of Majors that this student has
 from StudentMajor import StudentMajor
+from Enrollment import Enrollment
 from datetime import datetime
 
 
@@ -38,6 +39,21 @@ class Student(Base):
         self.lastName = lastName
         self.firstName = firstName
         self.email = email
+
+    def add_section(self, section):
+        for next_section in self.sections:
+            if next_section.section == section:
+                return
+        student_section = Enrollment(self, section)
+
+    def remove_section(self, section):
+        for next_section in self.sections:
+            if next_section.section == section:
+                self.sections.remove(next_section)
+                return
+
+
+
 
     def add_major(self, major):
         """Add a new major to the student.  We are not actually adding a major directly

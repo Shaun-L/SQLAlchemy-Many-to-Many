@@ -10,9 +10,13 @@ from Department import Department
 from Course import Course
 from Major import Major
 from Student import Student
+from Section import Section
 from StudentMajor import StudentMajor
+from Enrollment import Enrollment
 from Option import Option
 from Menu import Menu
+from datetime import time
+
 
 
 def add(sess: Session):
@@ -35,6 +39,206 @@ def list_objects(sess: Session):
         list_action = list_menu.menu_prompt()
         exec(list_action)
 
+def validating_time() -> time:
+    valid_time = False
+    while not valid_time:
+        time_input = input("Start time--> ")
+        if len(time_input) != 7 and len(time_input) != 8:
+            print("Invalid input. Structure input like this -> '8:32 PM'.")
+        else:
+            if time_input[1] == ":":
+                valid_time = True
+                if time_input[5:] == "PM":
+                    hours = int(time_input[0]) + 12
+                else:
+                    hours = int(time_input[0])
+                minutes = int(time_input[2:4])
+            elif time_input[2] == ":":
+                valid_time = True
+                if time_input[6:] == "PM":
+                    hours = int(time_input[0:2]) + 12
+                else:
+                    hours = int(time_input[0:2])
+                minutes = int(time_input[3:5])
+            else:
+                print("Invalid input. Structure input like this -> '8:32 PM'.")
+
+    return time(hours, minutes, 0)
+
+def enroll_student_section(sess: Session):
+    student: Student = select_student(sess)
+    section: Section = select_section(sess)
+    student_section_count: int = sess.query(Enrollment).filter(Enrollment.studentId == student.studentID,
+                                                               Enrollment.departmentAbbreviation == section.departmentAbbreviation,
+                                                               Enrollment.courseNumber == section.courseNumber,
+                                                               Enrollment.sectionNumber == section.sectionNumber,
+                                                               Enrollment.sectionYear == section.sectionYear,
+                                                               Enrollment.semester == section.semester).count()
+    unique_student_section: bool = student_section_count == 0
+    while not unique_student_section:
+        print("That student is already in that section. Try again.")
+        student = select_student(sess)
+        section = select_section(sess)
+    student.add_section(section)
+    sess.add(student)
+    sess.flush()
+
+
+def enroll_section_student(sess: Session):
+    section: Section = select_section(sess)
+    student: Student = select_student(sess)
+    student_section_count: int = sess.query(Enrollment).filter(Enrollment.studentId == student.studentID,
+                                                               Enrollment.departmentAbbreviation == section.departmentAbbreviation,
+                                                               Enrollment.courseNumber == section.courseNumber,
+                                                               Enrollment.sectionNumber == section.sectionNumber,
+                                                               Enrollment.sectionYear == section.sectionYear,
+                                                               Enrollment.semester == section.semester).count()
+    unique_student_section: bool = student_section_count == 0
+    while not unique_student_section:
+        print("That section already has that student. Try again")
+        section: Section = select_section(sess)
+        student: Student = select_student(sess)
+    section.add_student(student)
+    sess.add(section)
+    sess.flush()
+
+def delete_student_section(sess: Session):
+    student: Student = select_student(sess)
+    section: Section = select_section(sess)
+    student.remove_section(section)
+
+def delete_section_student(sess: Session):
+    section: Section = select_section(sess)
+    student: Student = select_student(sess)
+    section.remove_student(student)
+
+def list_student_section(sess: Session):
+    student: Student = select_student(sess)
+    recs = sess.query(Student).join(Enrollment, Student.studentID == Enrollment.studentId).join(
+        Section,
+        Enrollment.departmentAbbreviation == Section.departmentAbbreviation,
+        Enrollment.courseNumber == Section.courseNumber,
+        Enrollment.sectionNumber == Section.sectionNumber,
+        Enrollment.sectionYear == Section.sectionYear,
+        Enrollment.semester == Section.semester).filter(
+        Student.studentID == student.studentID).add_columns(
+        Student.lastName, Student.firstName, Section.courseNumber, Section.sectionNumber).all()
+    for stu in recs:
+        print(f"Student name: {stu.lastName}, {stu.firstName}, Section: {stu.courseNumber}-{stu.sectionNumber}.")
+
+def list_section_student(sess: Session):
+    section: Section = select_section(sess)
+    recs = sess.query(Section).join(
+        Enrollment,
+        Enrollment.departmentAbbreviation == Section.departmentAbbreviation,
+        Enrollment.courseNumber == Section.courseNumber,
+        Enrollment.sectionNumber == Section.sectionNumber,
+        Enrollment.sectionYear == Section.sectionYear,
+        Enrollment.semester == Section.semester).join(Student, Enrollment.studentId == Student.studentID).filter(
+        section.departmentAbbreviation == Section.departmentAbbreviation,
+        section.courseNumber == Section.courseNumber,
+        section.sectionNumber == Section.sectionNumber,
+        section.sectionYear == Section.sectionYear,
+        section.semester == Section.semester
+    ).add_columns(
+        Student.lastName, Student.firstName, Section.courseNumber, Section.sectionNumber).all()
+    for sec in recs:
+        print(f"Student name: {sec.lastName}, {sec.firstName}, Section: {sec.courseNumber}-{sec.sectionNumber}.")
+
+def add_section(sess : Session):
+    print("Which course do you want to add a section to?")
+    course: Course = select_course(sess)
+    semester_list = ["fall", "winter", "spring", "summer i", "summer ii"]
+    building_list = ["VEC", "ECS", "EN2", "EN3", "EN4", "ET", "SSPA"]
+    schedule_list = ["MW", "TuTh", "MWF", "F", "S"]
+    unique_reservation = False
+
+    while not unique_reservation:
+        correct_semester = False
+        correct_building = False
+        correct_schedule = False
+        while not correct_semester:
+            semester = input("Semester offered--> ")
+            if semester.lower() not in semester_list:
+                print(f"Invalid input. Make sure you are selecting a valid semester.\nSelect one-> {semester_list}")
+            else:
+                correct_semester = True
+        sectionYear = int(input("Year offered--> "))
+        while not correct_schedule:
+            schedule = input("Days Scheduled--> ")
+            if schedule not in schedule_list:
+                print(f"Invalid input. Make sure you are selecting a valid schedule.\nSelect one-> {schedule_list}")
+            else:
+                correct_schedule = True
+        startTime: time = validating_time()
+        instructor = input("Instructor name--> ")
+        instructor_count: int = sess.query(Section).filter(Section.sectionYear == sectionYear, Section.semester == semester,
+                                                            Section.schedule == schedule, Section.startTime == startTime,
+                                                            Section.instructor == instructor).count()
+
+        unique_instructor_slot = instructor_count == 0
+        if not unique_instructor_slot:
+            print("That instructor is already booked for that time, please re-enter inputs.")
+        else:
+            while not correct_building:
+                building = input("Building name--> ")
+                if building not in building_list:
+                    print(f"Invalid input. Make sure you are choosing a valid building.\nSelect one-> {building_list}")
+                else:
+                    correct_building = True
+            room = int(input("Enter Room Number--> "))
+            reservation_count: int = sess.query(Section).filter(Section.sectionYear == sectionYear, Section.semester == semester,
+                                                            Section.schedule == schedule, Section.startTime == startTime,
+                                                            Section.building == building, Section.room == room).count()
+
+            unique_reservation = reservation_count == 0
+            if not unique_reservation:
+                print("The room selected is already booked, please re-enter inputs.")
+    section = Section(course, semester, sectionYear, building, room, schedule, startTime, instructor)
+    sess.add(section)
+
+def select_section(sess: Session) -> Section:
+    found = False
+    abbreviation: str = ''
+    course_number: int = -1
+    section_number: int = -1
+    section_year: int = -1
+    semester: str = ''
+    while not found:
+        abbreviation = input("Department Abbreviation--> ")
+        course_number = int(input("Course Number--> "))
+        section_number = int(input("Section Number--> "))
+        section_year = int(input("Section Year--> "))
+        semester = input("Semester--> ")
+        unique_count = sess.query(Section).filter(Section.departmentAbbreviation == abbreviation,
+                                                  Section.courseNumber == course_number, Section.sectionNumber == section_number,
+                                                  Section.sectionYear == section_year, Section.semester == semester).count()
+
+        found = unique_count == 1
+        if not found:
+            print("No Sections with the given inputs. Try again.")
+    section = sess.query(Section).filter(Section.departmentAbbreviation == abbreviation,
+                                         Section.courseNumber == course_number, Section.sectionNumber == section_number,
+                                         Section.sectionYear == section_year, Section.semester == semester).first()
+    return section
+
+def list_sections(sess: Session):
+    found = False
+    abbreviation: str = ''
+    course_number: int = -1
+    while not found:
+        abbreviation = input("Department Abbreviation--> ")
+        course_number = int(input("Course Number--> "))
+        unique_count = sess.query(Section).filter(Section.departmentAbbreviation == abbreviation,
+                                                  Section.courseNumber == course_number).count()
+        found = unique_count >= 1
+        if not found:
+            print("No sections for that course. Try again")
+    sections: [Section] = list(sess.query(Section).filter(Section.departmentAbbreviation == abbreviation,
+                                                          Section.courseNumber == course_number))
+    print(f"Sections in {abbreviation} {course_number}:")
+    for section in sections:
+        print(section)
 
 def add_department(session: Session):
     """
@@ -291,15 +495,29 @@ def delete_student(session: Session):
     :param session:     The current connection to the database.
     :return:            None
     """
+    print("deleting a student")
     student: Student = select_student(session)
-    """This is a bit ghetto.  The relationship from Student to StudentMajor has 
-    cascade delete, so this delete will work even if a student has declared one
-    or more majors.  I could write a method on Student that would return some
-    indication of whether it has any children, and use that to let the user know
-    that they cannot delete this particular student.  But I'm too lazy at this
-    point.
-    """
-    session.delete(student)
+    n_sections = session.query(Section).filter(Enrollment.studentId == student.studentID).count()
+    if n_sections > 0:
+        print(f"Sorry, that student is enrolled in {n_sections} sections. "
+              f"Unenroll them from the sections first, then come back here to delete the student")
+    else:
+        session.delete(student)
+
+def delete_section(session: Session):
+    print("deleting a section")
+    section: Section = select_section(session)
+    n_students = session.query(Student).filter(
+        Enrollment.departmentAbbreviation == section.departmentAbbreviation,
+        Enrollment.courseNumber == section.courseNumber,
+        Enrollment.sectionNumber == section.sectionNumber,
+        Enrollment.sectionYear == section.sectionYear,
+        Enrollment.semester == section.semester).count()
+    if n_students > 0:
+        print(f"Sorry, that section has {n_students} enrolled in it. "
+              f"Unenroll them from the section first, then come back here to delete the section")
+    else:
+        session.delete(section)
 
 
 def delete_department(session: Session):
