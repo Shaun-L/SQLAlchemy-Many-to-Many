@@ -27,9 +27,12 @@ add_menu = Menu('add', 'Please indicate what you want to add:', [
     Option("Department", "add_department(sess)"),
     Option("Course", "add_course(sess)"),
     Option("Major", "add_major(sess)"),
+    Option("Section", "add_section(sess)"),
     Option("Student", "add_student(sess)"),
     Option("Student to Major", "add_student_major(sess)"),
     Option("Major to Student", "add_major_student(sess)"),
+    Option("Student to Section", "enroll_student_section(sess)"),
+    Option("Section to Student", "enroll_section_student(sess)"),
     Option("Exit", "pass")
 ])
 
@@ -40,6 +43,8 @@ delete_menu = Menu('delete', 'Please indicate what you want to delete from:', [
     Option("Student", "delete_student(sess)"),
     Option("Student to Major", "delete_student_major(sess)"),
     Option("Major to Student", "delete_major_student(sess)"),
+    Option("Student to Section", "delete_student_section"),
+    Option("Section to Student", "delete_section_student"),
     Option("Exit", "pass")
 ])
 
@@ -48,8 +53,11 @@ list_menu = Menu('list', 'Please indicate what you want to list:', [
     Option("Course", "list_course(sess)"),
     Option("Major", "list_major(sess)"),
     Option("Student", "list_student(sess)"),
+    Option("Section", "list_sections(sess)"),
     Option("Student to Major", "list_student_major(sess)"),
     Option("Major to Student", "list_major_student(sess)"),
+    Option("Student to Section", "list_student_section(sess)"),
+    Option("Section to Student", "list_section_student(sess)"),
     Option("Exit", "pass")
 ])
 

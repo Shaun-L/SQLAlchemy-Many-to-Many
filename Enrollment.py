@@ -8,19 +8,18 @@ class Enrollment(Base):
     """The association class between Section and Student."""
     __tablename__ = "enrollments"
     #the enrollments table has no attributes of its own the, following are foreign keys.
-    section: Mapped["Section"] = relationship(back_populates="sections")
-    student: Mapped["Student"] = relationship(back_populates="students")
+    section: Mapped["Section"] = relationship(back_populates="students")
+    student: Mapped["Student"] = relationship(back_populates="sections")
     studentId: Mapped[int] = mapped_column('student_id', ForeignKey("students.student_id"), primary_key=True)
     departmentAbbreviation: Mapped[str] = mapped_column("department_abbreviation", ForeignKey("sections.department_abbreviation"), primary_key=True)
     courseNumber: Mapped[int] = mapped_column("course_number", ForeignKey("sections.course_number"), primary_key=True)
-    sectionNumber: Mapped[int] = mapped_column("section_number", Integer, Identity(start=1, cycle=True),
-                                               ForeignKey("sections.section_number"), primary_key=True)
-    sectionYear: Mapped[int] = mapped_column("section_year", Integer, ForeignKey("sections.section_year"), primary_key=True)
-    semester: Mapped[str] = mapped_column("semester", String(10), ForeignKey("sections.semester"), primary_key=True)
+    sectionNumber: Mapped[int] = mapped_column("section_number", ForeignKey("sections.section_number"), primary_key=True)
+    sectionYear: Mapped[int] = mapped_column("section_year", ForeignKey("sections.section_year"), primary_key=True)
+    semester: Mapped[str] = mapped_column("semester", ForeignKey("sections.semester"), primary_key=True)
 
     #to ensure that no student enrolls into the same course more than once in a semester.
     __table_args__ = (UniqueConstraint("department_abbreviation", "course_number", "section_year", "semester", "student_id",
-                                       name="enrollments_uk_01"))
+                                       name="enrollments_uk_01"), )
 
     def __init__(self, section, student):
         self.section = section

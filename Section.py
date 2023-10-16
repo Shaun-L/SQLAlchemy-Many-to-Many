@@ -40,7 +40,7 @@ class Section(Base):
     startTime: Mapped[Time] = mapped_column("start_time", Time, nullable=False)
     instructor: Mapped[str] = mapped_column("instructor", String(80), nullable=False)
 
-    students: Mapped[List["Enrollment"]] = relationship(back_populates="student",
+    students: Mapped[List["Enrollment"]] = relationship(back_populates="section",
                                                         cascade="all, save-update, delete-orphan")
 
     __table_args__ = (UniqueConstraint("section_year", "semester", "schedule", "start_time", "building", "room",
@@ -73,6 +73,26 @@ class Section(Base):
             if next_student.student == student:
                 self.students.remove(next_student)
                 return
+
+    def set_course(self, course: Course):
+        # Questioning the addition of this function into Section.py, not stated in assignment guidelines, but 'feels' neccessary to set relationship between course and section. Not sure if it is neccessary though.
+        self.course = course
+        self.departmentAbbreviation = course.departmentAbbreviation
+        self.courseNumber = course.courseNumber
+
+    def __str__(self):
+        return f"\nSection Number: {self.sectionNumber}" \
+               f"\nDepartment abbr: {self.departmentAbbreviation}," \
+               f"Course Number: {self.courseNumber}," \
+               f"Semester: {self.semester}" \
+               f"\nSection Year: {self.sectionYear}," \
+               f"Building: {self.building}," \
+               f"Room: {self.room}" \
+               f"\nSchedule: {self.schedule}," \
+               f"Start Time: {self.startTime}," \
+               f"Instructor: {self.instructor}"
+
+
 """
 elif introspection_type == INTROSPECT_TABLES:
     class Section(Base):
@@ -97,25 +117,10 @@ elif introspection_type == INTROSPECT_TABLES:
             self.instructor = instructor
 """
 
-def set_course(self, course: Course):
-    # Questioning the addition of this function into Section.py, not stated in assignment guidelines, but 'feels' neccessary to set relationship between course and section. Not sure if it is neccessary though.
-    self.course = course
-    self.departmentAbbreviation = course.departmentAbbreviation
-    self.courseNumber = course.courseNumber
 
 
-def __str__(self):
-    return f"\nSection Number: {self.sectionNumber}" \
-           f"\nDepartment abbr: {self.departmentAbbreviation}," \
-           f"Course Number: {self.courseNumber}," \
-           f"Semester: {self.semester}" \
-           f"\nSection Year: {self.sectionYear}," \
-           f"Building: {self.building}," \
-           f"Room: {self.room}" \
-           f"\nSchedule: {self.schedule}," \
-           f"Start Time: {self.startTime}," \
-           f"Instructor: {self.instructor}"
 
 
-setattr(Section, 'set_course', set_course)
-setattr(Section, '__str__', __str__)
+
+#setattr(Section, 'set_course', set_course)
+#setattr(Section, '__str__', __str__)

@@ -3,6 +3,7 @@ from sqlalchemy import Integer, UniqueConstraint, ForeignKeyConstraint
 from sqlalchemy import String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from Department import Department
+from typing import List
 
 
 class Course(Base):
@@ -30,6 +31,7 @@ class Course(Base):
     name: Mapped[str] = mapped_column('name', String(50), nullable=False)
     description: Mapped[str] = mapped_column('description', String(500), nullable=False)
     units: Mapped[int] = mapped_column('units', Integer, nullable=False)
+    sections: Mapped[List["Section"]] = relationship(back_populates="course")
     # __table_args__ can best be viewed as directives that we ask SQLAlchemy to
     # send to the database.  In this case, that we want two separate uniqueness
     # constraints (candidate keys).
