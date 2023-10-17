@@ -116,11 +116,11 @@ def list_student_section(sess: Session):
     student: Student = select_student(sess)
     recs = sess.query(Student).join(Enrollment, Student.studentID == Enrollment.studentId).join(
         Section,
-        Enrollment.departmentAbbreviation == Section.departmentAbbreviation,
-        Enrollment.courseNumber == Section.courseNumber,
-        Enrollment.sectionNumber == Section.sectionNumber,
-        Enrollment.sectionYear == Section.sectionYear,
-        Enrollment.semester == Section.semester).filter(
+        (Enrollment.departmentAbbreviation == Section.departmentAbbreviation) &
+        (Enrollment.courseNumber == Section.courseNumber) &
+        (Enrollment.sectionNumber == Section.sectionNumber) &
+        (Enrollment.sectionYear == Section.sectionYear) &
+        (Enrollment.semester == Section.semester)).filter(
         Student.studentID == student.studentID).add_columns(
         Student.lastName, Student.firstName, Section.courseNumber, Section.sectionNumber).all()
     for stu in recs:
@@ -130,16 +130,16 @@ def list_section_student(sess: Session):
     section: Section = select_section(sess)
     recs = sess.query(Section).join(
         Enrollment,
-        Enrollment.departmentAbbreviation == Section.departmentAbbreviation,
-        Enrollment.courseNumber == Section.courseNumber,
-        Enrollment.sectionNumber == Section.sectionNumber,
-        Enrollment.sectionYear == Section.sectionYear,
-        Enrollment.semester == Section.semester).join(Student, Enrollment.studentId == Student.studentID).filter(
-        section.departmentAbbreviation == Section.departmentAbbreviation,
-        section.courseNumber == Section.courseNumber,
-        section.sectionNumber == Section.sectionNumber,
-        section.sectionYear == Section.sectionYear,
-        section.semester == Section.semester
+        (Enrollment.departmentAbbreviation == Section.departmentAbbreviation) &
+        (Enrollment.courseNumber == Section.courseNumber) &
+        (Enrollment.sectionNumber == Section.sectionNumber) &
+        (Enrollment.sectionYear == Section.sectionYear) &
+        (Enrollment.semester == Section.semester)).join(Student, Enrollment.studentId == Student.studentID).filter(
+        (section.departmentAbbreviation == Section.departmentAbbreviation) &
+        (section.courseNumber == Section.courseNumber) &
+        (section.sectionNumber == Section.sectionNumber) &
+        (section.sectionYear == Section.sectionYear) &
+        (section.semester == Section.semester)
     ).add_columns(
         Student.lastName, Student.firstName, Section.courseNumber, Section.sectionNumber).all()
     for sec in recs:
