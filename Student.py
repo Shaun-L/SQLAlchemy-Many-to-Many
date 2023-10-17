@@ -44,7 +44,7 @@ class Student(Base):
         for next_section in self.sections:
             if next_section.section == section:
                 return
-        student_section = Enrollment(self, section)
+        student_section = Enrollment(section, self)
 
     def remove_section(self, section):
         for next_section in self.sections:
