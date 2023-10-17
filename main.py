@@ -144,6 +144,7 @@ def list_section_student(sess: Session):
         Student.lastName, Student.firstName, Section.courseNumber, Section.sectionNumber).all()
     for sec in recs:
         print(f"Student name: {sec.lastName}, {sec.firstName}, Section: {sec.courseNumber}-{sec.sectionNumber}.")
+
 def add_section(sess : Session):
     print("Which course do you want to add a section to?")
     course: Course = select_course(sess)
