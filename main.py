@@ -247,25 +247,47 @@ def add_department(session: Session):
     :param session: The connection to the database.
     :return:        None
     """
-    unique_name: bool = False
-    unique_abbreviation: bool = False
-    name: str = ''
+
+    unique_abbr = False
+    unique_chair = False
+    unique_office = False
+    unique_desc = False
+    departmentName: str = ''
     abbreviation: str = ''
-    while not unique_abbreviation or not unique_name:
-        name = input("Department full name--> ")
-        abbreviation = input("Department abbreviation--> ")
-        name_count: int = session.query(Department).filter(Department.name == name).count()
-        unique_name = name_count == 0
-        if not unique_name:
-            print("We already have a department by that name.  Try again.")
-        if unique_name:
-            abbreviation_count = session.query(Department). \
-                filter(Department.abbreviation == abbreviation).count()
-            unique_abbreviation = abbreviation_count == 0
-            if not unique_abbreviation:
-                print("We already have a department with that abbreviation.  Try again.")
-    new_department = Department(abbreviation, name)
-    session.add(new_department)
+    chairName: str = ''
+    building: str = ''
+    office: int = 0
+    description: str = ''
+
+    while not unique_abbr or not unique_chair or not unique_office or not unique_desc:
+        departmentName = input("Department name --> ")
+        abbreviation = input("Department's abbreviation --> ")
+        chairName = input("Department Chair name --> ")
+        building = input("Building name --> ")
+        office = int(input("Office number --> "))
+        description = input("Description of department --> ")
+
+        abbr_count = session.query(Department).filter(Department.abbreviation == abbreviation).count()
+        chair_count = session.query(Department).filter(Department.chairName == chairName).count()
+        office_count = session.query(Department).filter(Department.building == building,
+                                                        Department.office == office).count()
+        desc_count = session.query(Department).filter(Department.description == description).count()
+
+        unique_abbr = abbr_count == 0
+        unique_chair = chair_count == 0
+        unique_office = office_count == 0
+        unique_desc = desc_count == 0
+
+        if not unique_abbr:
+            print("We already have a department by that abbreviation. Try again.")
+        elif not unique_chair:
+            print("The named individual is already a chair of a different department. Try again.")
+        elif not unique_office:
+            print("That office room is already occupied by another department. Try again.")
+        elif not unique_desc:
+            print("That description matches the description of another department. Try again.")
+    newDepartment = Department(abbreviation, departmentName, chairName, building, office, description)
+    session.add(newDepartment)
 
 
 def add_course(session: Session):
@@ -497,7 +519,14 @@ def delete_student(session: Session):
     """
     print("deleting a student")
     student: Student = select_student(session)
-    n_sections = session.query(Section).filter(Enrollment.studentId == student.studentID).count()
+    n_sections = sess.query(Student).join(Enrollment, Student.studentID == Enrollment.studentId).join(
+        Section,
+        (Enrollment.departmentAbbreviation == Section.departmentAbbreviation) &
+        (Enrollment.courseNumber == Section.courseNumber) &
+        (Enrollment.sectionNumber == Section.sectionNumber) &
+        (Enrollment.sectionYear == Section.sectionYear) &
+        (Enrollment.semester == Section.semester)).filter(
+        Student.studentID == student.studentID).count()
     if n_sections > 0:
         print(f"Sorry, that student is enrolled in {n_sections} sections. "
               f"Unenroll them from the sections first, then come back here to delete the student")
@@ -507,12 +536,19 @@ def delete_student(session: Session):
 def delete_section(session: Session):
     print("deleting a section")
     section: Section = select_section(session)
-    n_students = session.query(Student).filter(
-        Enrollment.departmentAbbreviation == section.departmentAbbreviation,
-        Enrollment.courseNumber == section.courseNumber,
-        Enrollment.sectionNumber == section.sectionNumber,
-        Enrollment.sectionYear == section.sectionYear,
-        Enrollment.semester == section.semester).count()
+    n_students = sess.query(Section).join(
+        Enrollment,
+        (Enrollment.departmentAbbreviation == Section.departmentAbbreviation) &
+        (Enrollment.courseNumber == Section.courseNumber) &
+        (Enrollment.sectionNumber == Section.sectionNumber) &
+        (Enrollment.sectionYear == Section.sectionYear) &
+        (Enrollment.semester == Section.semester)).join(Student, Enrollment.studentId == Student.studentID).filter(
+        (section.departmentAbbreviation == Section.departmentAbbreviation) &
+        (section.courseNumber == Section.courseNumber) &
+        (section.sectionNumber == Section.sectionNumber) &
+        (section.sectionYear == Section.sectionYear) &
+        (section.semester == Section.semester)
+    ).count()
     if n_students > 0:
         print(f"Sorry, that section has {n_students} enrolled in it. "
               f"Unenroll them from the section first, then come back here to delete the section")
@@ -721,12 +757,16 @@ def boilerplate(sess):
     :param sess:    The session that's open.
     :return:        None
     """
-    department: Department = Department('CECS', 'Computer Engineering Computer Science')
+    department: Department = Department('CECS', 'Computer Engineering Computer Science', 'John Doe', 'ECS', 101, 'This is the CECS department')
     major1: Major = Major(department, 'Computer Science', 'Fun with blinking lights')
     major2: Major = Major(department, 'Computer Engineering', 'Much closer to the silicon')
     student1: Student = Student('Brown', 'David', 'david.brown@gmail.com')
     student2: Student = Student('Brown', 'Mary', 'marydenni.brown@gmail.com')
     student3: Student = Student('Disposable', 'Bandit', 'disposable.bandit@gmail.com')
+    course1: Course = Course(department, 323, 'Database Fundamentals', 'This is Database fundamentals', 3)
+    course2: Course = Course(department, 328, 'Algorithms', 'This is Algorithms', 3)
+    section1: Section = Section(course1, 'Fall', 2023, 'VEC', 330, 'MW', time(15, 30, 0), 'Shaun Lim')
+    section2: Section = Section(course1, 'Fall', 2023, 'ECS', 100, 'TuTh', time(9, 30, 0), 'John Doe')
     student1.add_major(major1)
     student2.add_major(major1)
     student2.add_major(major2)
@@ -736,6 +776,10 @@ def boilerplate(sess):
     sess.add(student1)
     sess.add(student2)
     sess.add(student3)
+    sess.add(course1)
+    sess.add(course2)
+    sess.add(section1)
+    sess.add(section2)
     sess.flush()                                # Force SQLAlchemy to update the database, although not commit
 
 

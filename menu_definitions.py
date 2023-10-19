@@ -40,6 +40,7 @@ delete_menu = Menu('delete', 'Please indicate what you want to delete from:', [
     Option("Department", "delete_department(sess)"),
     Option("Course", "delete_course(sess)"),
     Option("Major", "delete_major(sess)"),
+    Option("Section", "delete_section(sess)"),
     Option("Student", "delete_student(sess)"),
     Option("Student to Major", "delete_student_major(sess)"),
     Option("Major to Student", "delete_major_student(sess)"),
