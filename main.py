@@ -754,16 +754,16 @@ def session_rollback(sess):
 
 if __name__ == '__main__':
     print('Starting off')
-    logging.basicConfig()
+    #logging.basicConfig()
     # use the logging factory to create our first logger.
     # for more logging messages, set the level to logging.DEBUG.
     # logging_action will be the text string name of the logging level, for instance 'logging.INFO'
-    logging_action = debug_select.menu_prompt()
+    #logging_action = debug_select.menu_prompt()
     # eval will return the integer value of whichever logging level variable name the user selected.
-    logging.getLogger("sqlalchemy.engine").setLevel(eval(logging_action))
+    #logging.getLogger("sqlalchemy.engine").setLevel(eval(logging_action))
     # use the logging factory to create our second logger.
     # for more logging messages, set the level to logging.DEBUG.
-    logging.getLogger("sqlalchemy.pool").setLevel(eval(logging_action))
+    #logging.getLogger("sqlalchemy.pool").setLevel(eval(logging_action))
 
     # Prompt the user for whether they want to introspect the tables or create all over again.
     introspection_mode: int = IntrospectionFactory().introspection_type
